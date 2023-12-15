@@ -1,0 +1,25 @@
+spring:
+  application:
+    name: resource-service
+  datasource:
+    url: jdbc:postgresql://localhost:5432/resource_service_db
+    username: resource_user
+    password: resource_password
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQL94Dialect
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
+  spring-doc:
+    api-docs:
+      path: /api-docs
+      enabled: true
+    swagger-ui:
+      enabled: true
+      path: /swagger-ui.html
+

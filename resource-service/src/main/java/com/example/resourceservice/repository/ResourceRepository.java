@@ -1,6 +1,6 @@
-package repository;
+package com.example.resourceservice.repository;
 
-import model.Resource;
+import com.example.resourceservice.model.Resource;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

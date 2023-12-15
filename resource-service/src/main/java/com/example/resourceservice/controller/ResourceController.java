@@ -1,4 +1,4 @@
-package controller;
+package com.example.resourceservice.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -8,19 +8,24 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import model.Resource;
+import com.example.resourceservice.model.Resource;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import service.ResourceService;
+import com.example.resourceservice.service.ResourceService;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
@@ -47,10 +52,10 @@ public class ResourceController {
                             mediaType = "application/json",
                             array = @ArraySchema(schema = @Schema(implementation = String.class))))
     })
-    @PostMapping(value = "/upload")
-    public ResponseEntity<Integer> uploadResource(@RequestBody byte[] fileData) {
-        Integer resourceId = resourceService.uploadResource(fileData);
-        // add a proper handling in service layer
+    @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Integer> uploadResource(@RequestParam("file") MultipartFile file) throws IOException {
+        Integer resourceId = resourceService.uploadResource(file);
+
         if (resourceId != null) {
             return new ResponseEntity<>(resourceId, HttpStatus.CREATED);
         } else {
@@ -105,9 +110,14 @@ public class ResourceController {
                             mediaType = "application/json",
                             array = @ArraySchema(schema = @Schema(implementation = String.class))))
     })
-    @DeleteMapping("/{resourceId}")
-    public ResponseEntity<Void> deleteResource(@PathVariable List<Integer> resourceIds) {
-        resourceService.deleteResource(resourceIds);
+    @DeleteMapping("/{resourceIds}")
+    public ResponseEntity<Void> deleteResource(
+            @PathVariable String resourceIds) {
+        List<Integer> ids = Arrays.stream(resourceIds.split(","))
+                .map(Integer::parseInt)
+                .collect(Collectors.toList());
+
+        resourceService.deleteResource(ids);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 }
