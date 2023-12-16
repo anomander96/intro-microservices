@@ -6,8 +6,10 @@ import lombok.Setter;
 @Getter
 @Setter
 public class SongMetadataDto {
-    private String title;
+    private String name;
     private String artist;
     private String album;
     private String genre;
+    private Integer year;
+    private String duration;
 }

@@ -1,5 +1,7 @@
+version: "3"
+
 services:
-  postgres:
+  resource_postgres_db:
     image: postgres:latest
     container_name: resource_postgres_db
     restart: unless-stopped
@@ -10,6 +12,21 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - resource-postgres-data:/var/lib/postgresql/data
+
+  song_postgres_db:
+    image: postgres:latest
+    container_name: song_postgres_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: song_service_db
+      POSTGRES_USER: song_user
+      POSTGRES_PASSWORD: song_password
+    ports:
+      - "5433:5432"
+    volumes:
+      - song-postgres-data:/var/lib/postgresql/data
+
 volumes:
-  postgres-data:
+  resource-postgres-data:
+  song-postgres-data:

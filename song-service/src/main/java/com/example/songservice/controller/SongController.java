@@ -1,5 +1,7 @@
-package com.example.resourceservice.controller;
+package com.example.songservice.controller;
 
+import com.example.songservice.model.Song;
+import com.example.songservice.service.SongService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -8,32 +10,77 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import com.example.resourceservice.model.Resource;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import com.example.resourceservice.service.ResourceService;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Map;
 
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/resources")
-public class ResourceController {
+@RequestMapping("/songs")
+public class SongController {
 
-    private final ResourceService resourceService;
+    private final SongService songService;
+
+    @Operation(summary = "Create a new song metadata record in database")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200",
+                    description = "Song created successfully.",
+                    content = @Content(mediaType = "application/json")),
+            @ApiResponse(responseCode = "404",
+                    description = "Bad request. List of validation errors(s)",
+                    content = @Content(
+                            mediaType = "application/json",
+                            array = @ArraySchema(schema = @Schema(implementation = String.class))
+                    )),
+            @ApiResponse(responseCode = "500",
+                    description = "An internal server error has occurred.",
+                    content = @Content(
+                            mediaType = "application/json",
+                            array = @ArraySchema(schema = @Schema(implementation = String.class))))
+    })
+    @PostMapping
+    public ResponseEntity<Map<String, Integer>> createSong(@RequestBody Song song) {
+        Song createdSong = songService.saveSong(song);
+        return new ResponseEntity<>(Map.of("id", createdSong.getId()), HttpStatus.CREATED);
+    }
+
+    @Operation(summary = "Returns song metadata.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200",
+                    description = "Song metadata returned successfully.",
+                    content = @Content(mediaType = "application/json")),
+            @ApiResponse(responseCode = "404",
+                    description = "Bad request. List of validation errors(s)",
+                    content = @Content(
+                            mediaType = "application/json",
+                            array = @ArraySchema(schema = @Schema(implementation = Song.class))
+                    )),
+            @ApiResponse(responseCode = "500",
+                    description = "An internal server error has occurred.",
+                    content = @Content(
+                            mediaType = "application/json",
+                            array = @ArraySchema(schema = @Schema(implementation = String.class))))
+    })
+    @GetMapping("/{id}")
+    public ResponseEntity<Song> getSong(@PathVariable Integer id) {
+        Song song = songService.getSongById(id);
+        if(song != null) {
+            return new ResponseEntity<>(song, HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
 
     @Operation(summary = "Upload the resource(audio file)")
     @ApiResponses(value = {
@@ -52,72 +99,9 @@ public class ResourceController {
                             mediaType = "application/json",
                             array = @ArraySchema(schema = @Schema(implementation = String.class))))
     })
-    @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<Integer> uploadResource(@RequestParam("file") MultipartFile file) throws IOException {
-        Integer resourceId = resourceService.uploadResource(file);
-
-        if (resourceId != null) {
-            return new ResponseEntity<>(resourceId, HttpStatus.CREATED);
-        } else {
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    @Operation(summary = "Get the binary audio data of the resource.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200",
-                    description = "Retrieves file.",
-                    content = @Content(
-                            mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = Resource.class))
-                    )),
-            @ApiResponse(responseCode = "404",
-                    description = "Bad request. List of validation errors(s)",
-                    content = @Content(
-                            mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = String.class))
-                    )),
-            @ApiResponse(responseCode = "500",
-                    description = "An internal server error has occurred.",
-                    content = @Content(
-                            mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = String.class))))
-    })
-    @GetMapping("/{resourceId}")
-    public ResponseEntity<Resource> getResourceById(@PathVariable Integer resourceId) {
-        Resource resource = resourceService.getResourceById(resourceId);
-        if (resource != null) {
-            return new ResponseEntity<>(resource, HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
-    }
-
-    @Operation(summary = "Delete a resource(s). If there is no resource for id, do nothing.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200",
-                    description = "File deleted successfully.",
-                    content = @Content(mediaType = "application/json")),
-            @ApiResponse(responseCode = "404",
-                    description = "Bad request. List of validation errors(s)",
-                    content = @Content(
-                            mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = String.class))
-                    )),
-            @ApiResponse(responseCode = "500",
-                    description = "An internal server error has occurred.",
-                    content = @Content(
-                            mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = String.class))))
-    })
-    @DeleteMapping("/{resourceIds}")
-    public ResponseEntity<Void> deleteResource(
-            @PathVariable String resourceIds) {
-        List<Integer> ids = Arrays.stream(resourceIds.split(","))
-                .map(Integer::parseInt)
-                .collect(Collectors.toList());
-
-        resourceService.deleteResource(ids);
+    @DeleteMapping
+    public ResponseEntity<Void> deleteSongs(@RequestParam List<Integer> ids) {
+        songService.deleteSongs(ids);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 }

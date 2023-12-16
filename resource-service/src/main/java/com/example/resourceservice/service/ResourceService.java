@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import com.example.resourceservice.model.Resource;
 import org.apache.tika.Tika;
 import org.apache.tika.metadata.Metadata;
+import org.apache.tika.metadata.TikaCoreProperties;
 import org.apache.tomcat.util.http.fileupload.FileUploadException;
 import org.springframework.stereotype.Service;
 import com.example.resourceservice.repository.ResourceRepository;
@@ -19,6 +20,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -29,8 +31,10 @@ public class ResourceService {
 
     private final WebClient.Builder webClientBuilder;
 
+    private final static String SONG_SERVICE_URL = "http://localhost:8082/songs";
+
     @Transactional
-    public Integer uploadResource(MultipartFile file) throws FileUploadException {
+    public Integer uploadResource(MultipartFile file) throws IOException {
         byte[] fileData;
         try {
             fileData = file.getBytes();
@@ -50,6 +54,10 @@ public class ResourceService {
             log.error("Error while saving file.", e);
             throw new FileUploadException("Could not upload file!", e);
         }
+
+        // Send metadata to Song Service
+        sendMetadataToSongService(savedResource);
+
         return savedResource.getId();
     }
 
@@ -63,6 +71,7 @@ public class ResourceService {
         resourceRepository.deleteAllByIdInBatch(resourceIds);
     }
 
+
     private Resource extractMetadata(byte[] fileData) {
         Tika tika = new Tika();
         Metadata metadata = new Metadata();
@@ -75,26 +84,32 @@ public class ResourceService {
 
         Resource resource = new Resource();
         resource.setFile(fileData);
-        resource.setTitle(metadata.get("title"));
-        resource.setArtist(metadata.get("xmpDM:artist"));
-        resource.setAlbum(metadata.get("xmpDM:album"));
-        resource.setGenre(metadata.get("xmpDM:genre"));
+        resource.setName(metadata.get(TikaCoreProperties.TITLE));
+        resource.setArtist(metadata.get(TikaCoreProperties.CREATOR));
+        resource.setAlbum(metadata.get(TikaCoreProperties.DESCRIPTION));
+        resource.setGenre(metadata.get(TikaCoreProperties.SUBJECT));
+
+        Optional.ofNullable(metadata.get(TikaCoreProperties.MODIFIED))
+                .map(Integer::valueOf)
+                .ifPresent(resource::setYear);
+        resource.setDuration(metadata.get(TikaCoreProperties.FORMAT));
 
         return resource;
     }
 
     private void sendMetadataToSongService(Resource resource) {
         SongMetadataDto songMetadataDto = new SongMetadataDto();
-        songMetadataDto.setTitle(resource.getTitle());
+        songMetadataDto.setName(resource.getName());
         songMetadataDto.setArtist(resource.getArtist());
         songMetadataDto.setAlbum(resource.getAlbum());
-
-        String songServiceUrl = "http://localhost:8080/songs";
+        songMetadataDto.setGenre(resource.getGenre());
+        songMetadataDto.setYear(resource.getYear());
+        songMetadataDto.setDuration(resource.getDuration());
 
         try {
             webClientBuilder.build()
                     .post()
-                    .uri(songServiceUrl)
+                    .uri(SONG_SERVICE_URL)
                     .body(BodyInserters.fromValue(songMetadataDto))
                     .retrieve()
                     .bodyToMono(Void.class)

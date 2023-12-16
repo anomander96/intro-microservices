@@ -1,4 +1,4 @@
-package com.example.resourceservice.model;
+package com.example.songservice.model;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -11,17 +11,14 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 
 @Entity
-@Table(name = "resources")
+@Table(name = "songs")
 @Getter
 @Setter
-public class Resource {
+public class Song {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
-
-    @Column(name = "file_data")
-    private byte[] file;
 
     @Column(name = "name")
     private String name;
@@ -40,13 +37,4 @@ public class Resource {
 
     @Column(name = "duration")
     private String duration;
-
-    public Resource() {
-
-    }
-
-    public Resource(byte[] file) {
-        this.file = file;
-    }
-
 }

@@ -5,9 +5,9 @@ FROM openjdk:21-jdk
 WORKDIR /app
 
 # Copy the necessary files into the container
-COPY target/resource-service.jar /app/resource-service.jar
+COPY target/song-service.jar /app/song-service.jar
 
 # Expose the port the service runs on
-EXPOSE 8081
+EXPOSE 8082
 
-ENTRYPOINT ["java", "-jar", "resource-service.jar"]
+ENTRYPOINT ["java", "-jar", "song-service.jar"]
