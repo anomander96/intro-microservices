@@ -12,18 +12,19 @@
 
     <groupId>org.example.resourceservice</groupId>
     <artifactId>resource-service</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.0</version>
 
     <properties>
         <java.version>21</java.version>
-        <spring.boot.version>2.6.4</spring.boot.version>
-        <spring.doc.version>1.5.13</spring.doc.version>
+        <spring.boot.version>3.2.1</spring.boot.version>
         <tika.version>2.7.0</tika.version>
         <lombok.version>1.18.30</lombok.version>
         <postgresql.version>42.6.0</postgresql.version>
-        <slf4j.version>1.7.36</slf4j.version>
-        <jackson.version>2.12.3</jackson.version>
+        <slf4j.version>2.0.5</slf4j.version>
+        <jackson.version>2.15.1</jackson.version>
     </properties>
+
+    <packaging>jar</packaging>
 
     <dependencies>
         <dependency>
@@ -60,8 +61,14 @@
         </dependency>
         <dependency>
             <groupId>org.springdoc</groupId>
-            <artifactId>springdoc-openapi-ui</artifactId>
-            <version>${spring.doc.version}</version>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+            <version>2.0.4</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>io.github.classgraph</groupId>
+                    <artifactId>classgraph</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>io.swagger.core.v3</groupId>
@@ -94,24 +101,28 @@
             <artifactId>mp3agic</artifactId>
             <version>0.9.1</version>
         </dependency>
+        <dependency>
+            <groupId>io.github.classgraph</groupId>
+            <artifactId>classgraph</artifactId>
+            <version>4.8.165</version>
+        </dependency>
     </dependencies>
 
     <build>
         <plugins>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.8.1</version>
-                <configuration>
-                    <source>${java.version}</source>
-                    <target>${java.version}</target>
-                </configuration>
-            </plugin>
-
-            <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
-                <version>${spring.boot.version}</version>
+                <configuration>
+                    <mainClass>com.example.resourceservice.ResourceServiceApplication</mainClass>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

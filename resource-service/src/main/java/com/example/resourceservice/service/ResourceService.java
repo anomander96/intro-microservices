@@ -15,7 +15,7 @@ import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
-import javax.transaction.Transactional;
+import jakarta.transaction.Transactional;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -70,8 +70,7 @@ public class ResourceService {
         log.info("Called deleteResource()");
         resourceRepository.deleteAllByIdInBatch(resourceIds);
     }
-
-
+    
     private Resource extractMetadata(byte[] fileData) {
         Tika tika = new Tika();
         Metadata metadata = new Metadata();

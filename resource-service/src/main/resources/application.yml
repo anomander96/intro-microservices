@@ -2,12 +2,12 @@ spring:
   application:
     name: resource-service
   datasource:
-    url: jdbc:postgresql://localhost:5432/resource_service_db
+    url: jdbc:postgresql://resource_postgres_db:5432/resource_service_db
     username: resource_user
     password: resource_password
     driver-class-name: org.postgresql.Driver
   jpa:
-    database-platform: org.hibernate.dialect.PostgreSQL94Dialect
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
       ddl-auto: update
     show-sql: true
@@ -18,8 +18,8 @@ spring:
   springdoc:
     api-docs:
       enabled: true
+      path: /v3/api-docs
     swagger-ui:
-      url: /v3/api-docs.yaml
       enabled: true
       path: /swagger-ui.html
 server:

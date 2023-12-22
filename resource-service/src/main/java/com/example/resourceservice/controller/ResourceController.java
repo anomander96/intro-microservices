@@ -84,7 +84,7 @@ public class ResourceController {
                             array = @ArraySchema(schema = @Schema(implementation = String.class))))
     })
     @GetMapping("/{resourceId}")
-    public ResponseEntity<Resource> getResourceById(@PathVariable Integer resourceId) {
+    public ResponseEntity<Resource> getResourceById(@PathVariable("resourceId") Integer resourceId) {
         Resource resource = resourceService.getResourceById(resourceId);
         if (resource != null) {
             return new ResponseEntity<>(resource, HttpStatus.OK);
@@ -112,7 +112,7 @@ public class ResourceController {
     })
     @DeleteMapping("/{resourceIds}")
     public ResponseEntity<Void> deleteResource(
-            @PathVariable String resourceIds) {
+            @RequestParam(value = "resourceIds") String resourceIds) {
         List<Integer> ids = Arrays.stream(resourceIds.split(","))
                 .map(Integer::parseInt)
                 .collect(Collectors.toList());

@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -52,7 +53,9 @@ public class SongController {
     @PostMapping
     public ResponseEntity<Map<String, Integer>> createSong(@RequestBody Song song) {
         Song createdSong = songService.saveSong(song);
-        return new ResponseEntity<>(Map.of("id", createdSong.getId()), HttpStatus.CREATED);
+        Map<String, Integer> responseBody = new HashMap<>();
+        responseBody.put("id", createdSong.getId());
+        return new ResponseEntity<>(responseBody, HttpStatus.CREATED);
     }
 
     @Operation(summary = "Returns song metadata.")
@@ -73,7 +76,7 @@ public class SongController {
                             array = @ArraySchema(schema = @Schema(implementation = String.class))))
     })
     @GetMapping("/{id}")
-    public ResponseEntity<Song> getSong(@PathVariable Integer id) {
+    public ResponseEntity<Song> getSong(@PathVariable("id") Integer id) {
         Song song = songService.getSongById(id);
         if(song != null) {
             return new ResponseEntity<>(song, HttpStatus.OK);
@@ -100,7 +103,7 @@ public class SongController {
                             array = @ArraySchema(schema = @Schema(implementation = String.class))))
     })
     @DeleteMapping
-    public ResponseEntity<Void> deleteSongs(@RequestParam List<Integer> ids) {
+    public ResponseEntity<Void> deleteSongs(@RequestParam(value = "ids") List<Integer> ids) {
         songService.deleteSongs(ids);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }

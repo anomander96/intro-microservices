@@ -12,4 +12,6 @@ public class SongMetadataDto {
     private String genre;
     private Integer year;
     private String duration;
+
+    public SongMetadataDto() {}
 }
