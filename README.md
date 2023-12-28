@@ -11,7 +11,13 @@ Was updated and added dockerfiles now to start an app you need:
 1. Open in terminal the root folder of project intro-microservices.
 2. Run: 'docker-compose up --build' for first time or just 'docker-compose up'
 3. Open in browser Swagger UI
-   http://localhost:8081/swagger-ui.html - this is for resource-service
-   http://localhost:8082/swagger-ui.html - this is for song-service
+
+http://localhost:8081/swagger-ui.html - this is for resource-service
+
+http://localhost:8082/swagger-ui.html - this is for song-service
+
+http://localhost:8761 - this is for discovery-service(Eureka)
+
+Application should start all 3 services by one command: 'docker-compose up'
 
 Note: In future should be added full validation, exceptions handling, tests, etc
