@@ -11,6 +11,7 @@
     <modules>
         <module>resource-service</module>
         <module>song-service</module>
+        <module>discovery-service</module>
     </modules>
 
     <properties>

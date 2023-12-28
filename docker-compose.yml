@@ -1,6 +1,12 @@
 version: "3"
 
 services:
+  discovery-service:
+    build:
+      context: ./discovery-service
+    ports:
+      - "8761:8761"
+
   resource_postgres_db:
     image: postgres:latest
     ports:
@@ -28,10 +34,12 @@ services:
       context: ./resource-service
     depends_on:
       - resource_postgres_db
+      - discovery-service
     environment:
       SPRING_DATASOURCE_URL: ${RESOURCE_SPRING_DATASOURCE_URL}
       SPRING_DATASOURCE_USERNAME: ${RESOURCE_SPRING_DATASOURCE_USERNAME}
       SPRING_DATASOURCE_PASSWORD: ${RESOURCE_SPRING_DATASOURCE_PASSWORD}
+      EUREKA_CLIENT_SERVICE_URL_DEFAULT_ZONE: ${EUREKA_URL}
     ports:
       - "8081:8081"
 
@@ -40,10 +48,12 @@ services:
       context: ./song-service
     depends_on:
       - song_postgres_db
+      - discovery-service
     environment:
       SPRING_DATASOURCE_URL: ${SONG_SPRING_DATASOURCE_URL}
       SPRING_DATASOURCE_USERNAME: ${SONG_SPRING_DATASOURCE_USERNAME}
       SPRING_DATASOURCE_PASSWORD: ${SONG_SPRING_DATASOURCE_PASSWORD}
+      EUREKA_CLIENT_SERVICE_URL_DEFAULT_ZONE: ${EUREKA_URL}
     ports:
       - "8082:8082"
 
