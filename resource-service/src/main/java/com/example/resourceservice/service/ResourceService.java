@@ -4,9 +4,11 @@ import com.example.resourceservice.dto.SongMetadataDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import com.example.resourceservice.model.Resource;
-import org.apache.tika.Tika;
+
 import org.apache.tika.metadata.Metadata;
-import org.apache.tika.metadata.TikaCoreProperties;
+import org.apache.tika.parser.AutoDetectParser;
+import org.apache.tika.parser.ParseContext;
+import org.apache.tika.sax.BodyContentHandler;
 import org.apache.tomcat.util.http.fileupload.FileUploadException;
 import org.springframework.stereotype.Service;
 import com.example.resourceservice.repository.ResourceRepository;
@@ -31,7 +33,7 @@ public class ResourceService {
 
     private final WebClient.Builder webClientBuilder;
 
-    private final static String SONG_SERVICE_URL = "http://localhost:8082/songs";
+    private final static String SONG_SERVICE_URL = "http://song-service:8082/songs";
 
     @Transactional
     public Integer uploadResource(MultipartFile file) throws IOException {
@@ -70,30 +72,40 @@ public class ResourceService {
         log.info("Called deleteResource()");
         resourceRepository.deleteAllByIdInBatch(resourceIds);
     }
-    
+
     private Resource extractMetadata(byte[] fileData) {
-        Tika tika = new Tika();
         Metadata metadata = new Metadata();
+        AutoDetectParser parser = new AutoDetectParser();
+        BodyContentHandler handler = new BodyContentHandler();
+        ParseContext parseContext = new ParseContext();
 
         try (InputStream stream = new ByteArrayInputStream(fileData)) {
-            tika.parse(stream, metadata);
+            parser.parse(stream, handler, metadata, parseContext);
+
+            log.info("Parsed Metadata: " + metadata);
+
+            Resource resource = new Resource();
+            resource.setFile(fileData);
+            resource.setName(metadata.get("dc:title"));
+            resource.setArtist(metadata.get("xmpDM:artist"));
+            resource.setAlbum(metadata.get("xmpDM:album"));
+            resource.setGenre(metadata.get("xmpDM:audioCompressor"));
+
+            Optional.ofNullable(metadata.get("xmpDM:releaseDate"))
+                    .map(s -> s.split("-")[0])
+                    .map(Integer::parseInt)
+                    .ifPresent(resource::setYear);
+
+            Optional.ofNullable(metadata.get("xmpDM:duration"))
+                    .map(s -> s.split("\\.")[0])
+                    .ifPresent(resource::setDuration);
+
+            return resource;
         } catch (Exception e) {
             log.error("Error while parsing file.", e);
         }
 
-        Resource resource = new Resource();
-        resource.setFile(fileData);
-        resource.setName(metadata.get(TikaCoreProperties.TITLE));
-        resource.setArtist(metadata.get(TikaCoreProperties.CREATOR));
-        resource.setAlbum(metadata.get(TikaCoreProperties.DESCRIPTION));
-        resource.setGenre(metadata.get(TikaCoreProperties.SUBJECT));
-
-        Optional.ofNullable(metadata.get(TikaCoreProperties.MODIFIED))
-                .map(Integer::valueOf)
-                .ifPresent(resource::setYear);
-        resource.setDuration(metadata.get(TikaCoreProperties.FORMAT));
-
-        return resource;
+        return null;
     }
 
     private void sendMetadataToSongService(Resource resource) {
@@ -105,6 +117,8 @@ public class ResourceService {
         songMetadataDto.setYear(resource.getYear());
         songMetadataDto.setDuration(resource.getDuration());
 
+        log.info("Sending to Song Service: " + songMetadataDto);
+
         try {
             webClientBuilder.build()
                     .post()
@@ -115,10 +129,10 @@ public class ResourceService {
                     .block();
         } catch (WebClientResponseException ex) {
             log.error("Error occurred while calling Song Service: " + ex.getMessage());
-            // Add more proper handling
+            // add correct handling in future
         } catch (Exception ex) {
             log.error("Unexpected error occurred while calling Song Service: " + ex.getMessage());
-            // Add more proper handling
+            // add correct handling in future
         }
     }
 }

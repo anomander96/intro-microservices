@@ -16,6 +16,10 @@ import jakarta.persistence.Table;
 @Setter
 public class Song {
 
+    public Song() {
+
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;

@@ -60,3 +60,8 @@ services:
 volumes:
   resource-postgres-data:
   song-postgres-data:
+
+#    ports:
+#      - "8082-8083:8082"
+#    deploy:
+#      replicas: 2
