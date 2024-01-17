@@ -1,0 +1,5 @@
+spring:
+  application: resource-processor
+
+server:
+  port: 8083

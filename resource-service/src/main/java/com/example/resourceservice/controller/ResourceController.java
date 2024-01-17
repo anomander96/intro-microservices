@@ -63,6 +63,29 @@ public class ResourceController {
         }
     }
 
+    @Operation(summary = "Upload the resource(audio file) to S3 bucket")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200",
+                    description = "File uploaded successfully.",
+                    content = @Content(mediaType = "application/json")),
+            @ApiResponse(responseCode = "404",
+                    description = "Bad request. List of validation errors(s)",
+                    content = @Content(
+                            mediaType = "application/json",
+                            array = @ArraySchema(schema = @Schema(implementation = String.class))
+                    )),
+            @ApiResponse(responseCode = "500",
+                    description = "An internal server error has occurred.",
+                    content = @Content(
+                            mediaType = "application/json",
+                            array = @ArraySchema(schema = @Schema(implementation = String.class))))
+    })
+    @PostMapping(value = "/uploadToS3", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<String> uploadResourceToS3(@RequestParam("file") MultipartFile file) {
+        resourceService.uploadFileToS3Bucket(file);
+        return new ResponseEntity<>("File uploaded successfully!", HttpStatus.OK);
+    }
+
     @Operation(summary = "Get the binary audio data of the resource.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200",

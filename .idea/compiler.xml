@@ -8,8 +8,9 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="resource-service" />
-        <module name="discovery-service" />
         <module name="song-service" />
+        <module name="resource-processor" />
+        <module name="discovery-service" />
       </profile>
     </annotationProcessing>
   </component>

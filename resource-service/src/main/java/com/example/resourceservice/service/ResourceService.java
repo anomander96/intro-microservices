@@ -1,6 +1,9 @@
 package com.example.resourceservice.service;
 
+import com.amazonaws.services.s3.AmazonS3;
 import com.example.resourceservice.dto.SongMetadataDto;
+import com.example.resourceservice.model.ResourceLocation;
+import com.example.resourceservice.repository.ResourceLocationRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import com.example.resourceservice.model.Resource;
@@ -10,6 +13,7 @@ import org.apache.tika.parser.AutoDetectParser;
 import org.apache.tika.parser.ParseContext;
 import org.apache.tika.sax.BodyContentHandler;
 import org.apache.tomcat.util.http.fileupload.FileUploadException;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import com.example.resourceservice.repository.ResourceRepository;
 import org.springframework.web.multipart.MultipartFile;
@@ -31,7 +35,16 @@ public class ResourceService {
 
     private final ResourceRepository resourceRepository;
 
+    private final ResourceLocationRepository resourceLocationRepository;
+
     private final WebClient.Builder webClientBuilder;
+
+    private final AmazonS3 s3client;
+
+    private final StorageService storageService;
+
+    @Value("${S3_BUCKET_NAME}")
+    private String bucketName;
 
     private final static String SONG_SERVICE_URL = "http://song-service:8082/songs";
 
@@ -71,6 +84,20 @@ public class ResourceService {
     public void deleteResource(List<Integer> resourceIds) {
         log.info("Called deleteResource()");
         resourceRepository.deleteAllByIdInBatch(resourceIds);
+    }
+
+    @Transactional
+    public void uploadFileToS3Bucket(MultipartFile multipartFile) {
+        // this method upload file to s3 bucket and save the location into our db
+        storageService.uploadFileToS3(multipartFile);
+
+        // save to db
+        ResourceLocation resourceLocation = new ResourceLocation();
+        String s3FileLocation = String.valueOf(s3client.getUrl(bucketName, multipartFile.getOriginalFilename()));
+
+        log.info("File location is: " + s3FileLocation);
+        resourceLocation.setFileLocation(s3FileLocation);
+        resourceLocationRepository.save(resourceLocation);
     }
 
     private Resource extractMetadata(byte[] fileData) {

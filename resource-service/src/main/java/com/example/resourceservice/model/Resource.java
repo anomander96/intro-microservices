@@ -23,6 +23,9 @@ public class Resource {
     @Column(name = "file_data")
     private byte[] file;
 
+    @Column(name = "file_location")
+    private String fileLocation;
+
     @Column(name = "name")
     private String name;
 
