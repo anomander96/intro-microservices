@@ -1,7 +1,10 @@
 package com.example.resourceservice.service;
 
 import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.model.GetObjectRequest;
 import com.amazonaws.services.s3.model.PutObjectRequest;
+import com.amazonaws.services.s3.model.S3Object;
+import com.amazonaws.services.s3.model.S3ObjectInputStream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -9,8 +12,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.Objects;
 
 @Slf4j
@@ -31,8 +37,18 @@ public class StorageService {
             fileObj.delete();
         } catch (Exception e) {
             log.error(e.getMessage());
-            e.printStackTrace();
         }
+    }
+
+    public File getFileFromS3(String fileName) {
+        S3Object object = s3Client.getObject(new GetObjectRequest(bucketName, fileName));
+        File file = new File(fileName);
+        try(S3ObjectInputStream inputStream = object.getObjectContent()) {
+            Files.copy(inputStream, file.toPath(), StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException e) {
+            log.error("Error occurred while reading a file.");
+        }
+        return file;
     }
 
     public File convertMultiPartToFile(MultipartFile file) throws IOException {

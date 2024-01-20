@@ -19,6 +19,9 @@ public class ResourceLocation {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
+    @Column(name = "key")
+    private String key;
+
     @Column(name = "file_location")
     private String fileLocation;
 }

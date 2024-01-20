@@ -81,9 +81,45 @@ public class ResourceController {
                             array = @ArraySchema(schema = @Schema(implementation = String.class))))
     })
     @PostMapping(value = "/uploadToS3", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<String> uploadResourceToS3(@RequestParam("file") MultipartFile file) {
-        resourceService.uploadFileToS3Bucket(file);
-        return new ResponseEntity<>("File uploaded successfully!", HttpStatus.OK);
+    public ResponseEntity<Integer> uploadResourceToS3(@RequestParam("file") MultipartFile file) {
+        Integer resourceLocationId = resourceService.uploadFileToS3Bucket(file);
+
+        if (resourceLocationId != null) {
+            return new ResponseEntity<>(resourceLocationId, HttpStatus.CREATED);
+        } else {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @Operation(summary = "Get the binary audio data of the resource from S3 bucket.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200",
+                    description = "Retrieves file.",
+                    content = @Content(
+                            mediaType = "application/json",
+                            array = @ArraySchema(schema = @Schema(implementation = Resource.class))
+                    )),
+            @ApiResponse(responseCode = "404",
+                    description = "Bad request. List of validation errors(s)",
+                    content = @Content(
+                            mediaType = "application/json",
+                            array = @ArraySchema(schema = @Schema(implementation = String.class))
+                    )),
+            @ApiResponse(responseCode = "500",
+                    description = "An internal server error has occurred.",
+                    content = @Content(
+                            mediaType = "application/json",
+                            array = @ArraySchema(schema = @Schema(implementation = String.class))))
+    })
+    @GetMapping("resourceLocation/{resourceLocationId}")
+    public ResponseEntity<Resource> getResourceFromS3(@PathVariable("resourceLocationId") Integer resourceLocationId) {
+        Resource resource = resourceService.getResourceFromS3(resourceLocationId);
+
+        if (resource != null) {
+            return new ResponseEntity<>(resource, HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
     }
 
     @Operation(summary = "Get the binary audio data of the resource.")
