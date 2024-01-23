@@ -1,5 +1,6 @@
 package com.example.resourceprocessor.service;
 
+import com.example.resourceprocessor.dto.ResourceDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.tika.exception.TikaException;
 import org.apache.tika.metadata.Metadata;
@@ -19,18 +20,16 @@ import java.io.InputStream;
 @Service
 public class MetadataExtractionService {
 
-    public Metadata extractMetadata(File mp3File) {
-        Metadata metadata = null;
-        try (InputStream inputStream = new FileInputStream(mp3File)) {
-            ContentHandler handler = new BodyContentHandler(10 * 1024 * 1024);
-            metadata = new Metadata();
-            Mp3Parser mp3Parser = new Mp3Parser();
-            ParseContext parseContext = new ParseContext();
-            mp3Parser.parse(inputStream, handler, metadata, parseContext);
-        } catch (IOException | SAXException | TikaException e) {
-            log.error(e.getMessage());
-            // add a proper handling in future
-        }
+    public Metadata extractMetadata(ResourceDTO resource) {
+        Metadata metadata = new Metadata();
+
+        metadata.add("dc:title", resource.getName());
+        metadata.add("xmpDM:artist", resource.getArtist());
+        metadata.add("xmpDM:album", resource.getAlbum());
+        metadata.add("xmpDM:audioCompressor", resource.getGenre());
+        metadata.add("xmpDM:releaseDate", String.valueOf(resource.getYear()));
+        metadata.add("xmpDM:duration", resource.getDuration());
+
         return metadata;
     }
 

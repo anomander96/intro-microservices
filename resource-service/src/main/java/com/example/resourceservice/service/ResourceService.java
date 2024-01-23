@@ -8,11 +8,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import com.example.resourceservice.model.Resource;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.parser.AutoDetectParser;
 import org.apache.tika.parser.ParseContext;
 import org.apache.tika.sax.BodyContentHandler;
 import org.apache.tomcat.util.http.fileupload.FileUploadException;
+import org.springframework.amqp.AmqpException;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import com.example.resourceservice.repository.ResourceRepository;
@@ -23,6 +26,7 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 
 import jakarta.transaction.Transactional;
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
@@ -43,8 +47,13 @@ public class ResourceService {
 
     private final StorageService storageService;
 
+    private final RabbitTemplate rabbitTemplate;
+
     @Value("${S3_BUCKET_NAME}")
     private String bucketName;
+
+    @Value("${RESOURCE_EXCHANGE_NAME}")
+    private String exchangeName;
 
     private final static String SONG_SERVICE_URL = "http://song-service:8082/songs";
 
@@ -73,6 +82,9 @@ public class ResourceService {
         // Send metadata to Song Service
         sendMetadataToSongService(savedResource);
 
+        // Send message to RabbitMQ for the Resource Processor to start processing
+        sendResourceToProcessor(savedResource.getId());
+
         return savedResource.getId();
     }
 
@@ -87,7 +99,7 @@ public class ResourceService {
     }
 
     @Transactional
-    public void uploadFileToS3Bucket(MultipartFile multipartFile) {
+    public Integer uploadFileToS3Bucket(MultipartFile multipartFile) {
         // this method upload file to s3 bucket and save the location into our db
         storageService.uploadFileToS3(multipartFile);
 
@@ -96,8 +108,27 @@ public class ResourceService {
         String s3FileLocation = String.valueOf(s3client.getUrl(bucketName, multipartFile.getOriginalFilename()));
 
         log.info("File location is: " + s3FileLocation);
+        resourceLocation.setKey(multipartFile.getOriginalFilename());
         resourceLocation.setFileLocation(s3FileLocation);
-        resourceLocationRepository.save(resourceLocation);
+        ResourceLocation savedResourceLocation = resourceLocationRepository.save(resourceLocation);
+
+        // Send message to RabbitMQ for the Resource Processor to start processing
+        sendResourceToProcessor(savedResourceLocation.getId());
+
+        return savedResourceLocation.getId();
+    }
+
+    @Transactional
+    public Resource getResourceFromS3(Integer resourceLocationId) {
+        ResourceLocation resourceLocation = resourceLocationRepository.getReferenceById(resourceLocationId);
+        File fileData = storageService.getFileFromS3(resourceLocation.getKey());
+        Resource resource = null;
+        try {
+            resource = extractMetadata(FileUtils.readFileToByteArray(fileData));
+        } catch (IOException e) {
+            log.error("Error during extracting fileMetadata");
+        }
+        return resource;
     }
 
     private Resource extractMetadata(byte[] fileData) {
@@ -159,6 +190,18 @@ public class ResourceService {
             // add correct handling in future
         } catch (Exception ex) {
             log.error("Unexpected error occurred while calling Song Service: " + ex.getMessage());
+            // add correct handling in future
+        }
+    }
+
+    private void sendResourceToProcessor(Integer resourceId) {
+        String routingKey = "resource.upload";
+
+        try {
+            rabbitTemplate.convertAndSend(exchangeName, routingKey, resourceId);
+            log.info("Resource sent to the processor: " + resourceId);
+        } catch (AmqpException ex) {
+            log.error("Error occurred while sending resource to the processor: " + ex.getMessage());
             // add correct handling in future
         }
     }

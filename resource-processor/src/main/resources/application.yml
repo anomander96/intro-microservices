@@ -1,5 +1,25 @@
 spring:
-  application: resource-processor
+  application:
+    name: resource-processor
 
 server:
-  port: 8083
+  port: 8084
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://discovery-service:8761/eureka/
+  instance:
+    hostname: resource-processor
+
+rabbitmq:
+  host: rabbitmq
+  port: 5672
+  username: ${RABBITMQ_DEFAULT_USER}
+  password: ${RABBITMQ_DEFAULT_PASS}
+
+resource:
+  exchange:
+    name: ${RESOURCE_EXCHANGE_NAME}
+  queue:
+    name: ${RESOURCE_QUEUE_NAME}

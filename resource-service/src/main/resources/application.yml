@@ -31,3 +31,13 @@ eureka:
       defaultZone: http://discovery-service:8761/eureka/
   instance:
     hostname: resource-service
+
+rabbitmq:
+  host: rabbitmq
+  port: 5672
+  username: ${RABBITMQ_DEFAULT_USER}
+  password: ${RABBITMQ_DEFAULT_PASS}
+
+resource:
+  exchange:
+    name: ${RESOURCE_EXCHANGE_NAME}

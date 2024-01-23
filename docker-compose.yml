@@ -1,6 +1,17 @@
 version: "3"
 
 services:
+  rabbitmq:
+    image: "rabbitmq:3.8-management-alpine"
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_ERLANG_COOKIE: ${RABBITMQ_ERLANG_COOKIE}
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
+      RABBITMQ_DEFAULT_VHOST: '/'
+
   discovery-service:
     build:
       context: ./discovery-service
@@ -35,6 +46,7 @@ services:
     depends_on:
       - resource_postgres_db
       - discovery-service
+      - rabbitmq
     environment:
       SPRING_DATASOURCE_URL: ${RESOURCE_SPRING_DATASOURCE_URL}
       SPRING_DATASOURCE_USERNAME: ${RESOURCE_SPRING_DATASOURCE_USERNAME}
@@ -44,6 +56,12 @@ services:
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
       AWS_REGION: ${AWS_REGION}
       S3_BUCKET_NAME: ${S3_BUCKET_NAME}
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: ${RABBITMQ_DEFAULT_USER}
+      SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_DEFAULT_PASS}
+      RESOURCE_EXCHANGE_NAME: ${RESOURCE_EXCHANGE_NAME}
+      RESOURCE_QUEUE_NAME: ${RESOURCE_QUEUE_NAME}
     ports:
       - "8081:8081"
 
@@ -60,6 +78,24 @@ services:
       EUREKA_CLIENT_SERVICE_URL_DEFAULT_ZONE: ${EUREKA_URL}
     ports:
       - "8082:8082"
+
+  resource-processor:
+    build:
+      context: ./resource-processor
+    depends_on:
+      - rabbitmq
+      - discovery-service
+#      - resource-service
+    environment:
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: ${RABBITMQ_DEFAULT_USER}
+      SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_DEFAULT_PASS}
+      RESOURCE_EXCHANGE_NAME: ${RESOURCE_EXCHANGE_NAME}
+      RESOURCE_QUEUE_NAME: ${RESOURCE_QUEUE_NAME}
+      EUREKA_CLIENT_SERVICE_URL_DEFAULT_ZONE: ${EUREKA_URL}
+    ports:
+      - "8084:8084"
 
 volumes:
   resource-postgres-data:
