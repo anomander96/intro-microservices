@@ -1,6 +1,7 @@
 package com.example.resourceprocessor.service;
 
-import com.example.resourceprocessor.dto.ResourceDTO;
+import com.example.resourceprocessor.dto.ResourceDto;
+import com.example.resourceprocessor.dto.SongDto;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Recover;
@@ -36,10 +37,10 @@ public class ResourceProcessingService {
     @Retryable(maxAttempts = 5, backoff = @Backoff(delay = 2000, multiplier = 2))
     public void processResource(Integer resourceLocationId) {
         // Fetch the resource object from the Resource Service using a synchronous call
-        ResourceDTO resourceDto = resourceServiceWebClient.get()
+        ResourceDto resourceDto = resourceServiceWebClient.get()
                 .uri("/resourceLocation/" + resourceLocationId)
                 .retrieve()
-                .bodyToMono(ResourceDTO.class)
+                .bodyToMono(ResourceDto.class)
                 .block();
 
         if (resourceDto == null) {
@@ -47,12 +48,12 @@ public class ResourceProcessingService {
             return;
         }
 
-        System.out.println(resourceDto.toString());
+        SongDto songDto = convertToSongDto(resourceDto);
 
         // Send the resource to the Song Service using a synchronous call
         songServiceWebClient.post()
                 .uri("/songs")
-                .bodyValue(resourceDto)
+                .bodyValue(songDto)
                 .retrieve()
                 .bodyToMono(Void.class)
                 .block();
@@ -62,6 +63,17 @@ public class ResourceProcessingService {
     public void recover(Exception e, Integer resourceId){
         // handle recovery logic here
         log.info("Recovering started...");
+    }
+
+    private SongDto convertToSongDto(ResourceDto resourceDto) {
+        SongDto songDto = new SongDto();
+        songDto.setName(resourceDto.getName());
+        songDto.setArtist(resourceDto.getArtist());
+        songDto.setAlbum(resourceDto.getAlbum());
+        songDto.setGenre(resourceDto.getGenre());
+        songDto.setYear(resourceDto.getYear());
+        songDto.setDuration(resourceDto.getDuration());
+        return songDto;
     }
 
 }

@@ -7,7 +7,7 @@ import lombok.ToString;
 @Getter
 @Setter
 @ToString
-public class ResourceDTO {
+public class ResourceDto {
     private Integer id;
     private byte[] file;
     private String fileLocation;
