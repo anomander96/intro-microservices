@@ -2,12 +2,11 @@ Right now it's a simple microservice app that can:
 
 Upload a mp3 file, process the file in this way:
 Extract file metadata. App is using an external library Apache Tika.
-Then app stores mp3 file to the underlying database of the service as Blob(each service
-has its own database, docker specified);
-App invokes song-service to store song metadata.
+Then resource-service microservice save mp3 file into S3 bucket. Then resource-processor 
+microservice parse metadata from mp3 and send it to song-service which save this data into db.
+App is using RabbitMQ, Eureka.
 
-Here is a simple instruction for current app running related to module 2
-Was updated and added dockerfiles now to start an app you need:
+Here is a simple instruction for current app version:
 1. Open in terminal the root folder of project intro-microservices.
 2. Run: 'docker-compose up --build' for first time or just 'docker-compose up'
 3. Open in browser Swagger UI
@@ -18,6 +17,4 @@ http://localhost:8082/swagger-ui.html - this is for song-service
 
 http://localhost:8761 - this is for discovery-service(Eureka)
 
-Application should start all 3 services by one command: 'docker-compose up'
-
-Note: In future should be added full validation, exceptions handling, tests, etc
+Application should start all services by one command: 'docker-compose up'
