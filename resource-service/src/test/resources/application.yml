@@ -1,0 +1,35 @@
+#spring:
+#  application:
+#    name: resource-service-test
+#  datasource:
+#    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+#    username: sa
+#    password: ''
+#    driver-class-name: org.h2.Driver
+#  jpa:
+#    database-platform: org.hibernate.dialect.H2Dialect
+#    hibernate:
+#      ddl-auto: update
+#    show-sql: true
+#  servlet:
+#    multipart:
+#      max-file-size: 100MB
+#      max-request-size: 100MB
+#server:
+#  port: 8081
+
+cloud:
+  aws:
+    stack:
+      auto: false
+    accessKeyId: accessKey
+    secretKey: secretKey
+    endpoint:
+      uri: http://localhost:4572
+    region:
+      static: us-east-1
+    credentials:
+      useDefaultAwsCredentialsChain: true
+    s3:
+      path_style_access: true
+    protocol: http
