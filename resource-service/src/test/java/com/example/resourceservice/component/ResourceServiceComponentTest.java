@@ -27,4 +27,6 @@ public class ResourceServiceComponentTest {
 
         assertEquals(resource, createdResource);
     }
+
+    // add another related tests
 }
