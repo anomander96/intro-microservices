@@ -10,6 +10,7 @@
         <module name="resource-service" />
         <module name="song-service" />
         <module name="resource-processor" />
+        <module name="storage-service" />
         <module name="discovery-service" />
       </profile>
     </annotationProcessing>
