@@ -1,0 +1,67 @@
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://discovery-service:8761/eureka/
+  instance:
+    hostname: api-gateway
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          lower-case-service-id: true
+      routes:
+        - id: resource-service
+          uri: lb://resource-service
+          predicates:
+            - Path=/api/resource/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: resourceService
+                fallbackUri: forward:/fallback
+        - id: song-service
+          uri: lb://song-service
+          predicates:
+            - Path=/api/songs/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: songService
+                fallbackUri: forward:/fallback
+        - id: resource-processor
+          uri: lb://resource-processor
+          predicates:
+            - Path=/processor/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: resourceProcessor
+                fallbackUri: forward:/fallback
+
+server:
+  port: 8989
+
+resilience4j.circuitbreaker:
+  configs:
+    default:
+      slidingWindowSize: 100
+      permittedNumberOfCallsInHalfOpenState: 10
+      automaticTransitionFromOpenToHalfOpenEnabled: true
+      waitDurationInOpenState: 10s
+      failureRateThreshold: 50
+      eventConsumerBufferSize: 10
+  instances:
+    resourceService:
+      baseConfig: default
+    songService:
+      baseConfig: default
+    resourceProcessor:
+      baseConfig: default
+
+logging:
+  level:
+    org.springframework.cloud.gateway: TRACE
+    org.springframework.cloud.circuitbreaker: DEBUG

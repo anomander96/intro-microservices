@@ -18,6 +18,14 @@ services:
     ports:
       - "8761:8761"
 
+  api-gateway:
+    build:
+      context: ./api-gateway
+    depends_on:
+      - discovery-service
+    ports:
+      - "8989:8989"
+
   resource_postgres_db:
     image: postgres:latest
     ports:
@@ -46,6 +54,7 @@ services:
     depends_on:
       - resource_postgres_db
       - discovery-service
+      - api-gateway
       - rabbitmq
     environment:
       SPRING_DATASOURCE_URL: ${RESOURCE_SPRING_DATASOURCE_URL}
