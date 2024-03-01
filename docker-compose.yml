@@ -48,6 +48,17 @@ services:
     volumes:
       - song-postgres-data:/var/lib/postgresql/data
 
+  storage_postgres_db:
+    image: postgres:latest
+    ports:
+      - "5434:5432"
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB_3}
+      POSTGRES_USER: ${POSTGRES_USER_3}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD_3}
+    volumes:
+      - storage-postgres-data:/var/lib/postgresql/data
+
   resource-service:
     build:
       context: ./resource-service
@@ -106,11 +117,40 @@ services:
     ports:
       - "8084:8084"
 
+  storage-service:
+    build:
+      context: ./storage-service
+    depends_on:
+      - storage_postgres_db
+    environment:
+      SPRING_DATASOURCE_URL: ${STORAGE_SPRING_DATASOURCE_URL}
+      SPRING_DATASOURCE_USERNAME: ${STORAGE_SPRING_DATASOURCE_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${STORAGE_SPRING_DATASOURCE_PASSWORD}
+
+    ports:
+      - "8085:8085"
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - 9090:9090
+
+  loki:
+    image: grafana/loki:2.0.0
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+
 volumes:
   resource-postgres-data:
   song-postgres-data:
-
-#    ports:
-#      - "8082-8083:8082"
-#    deploy:
-#      replicas: 2
+  storage-postgres-data:
+  loki:

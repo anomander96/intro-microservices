@@ -1,16 +1,19 @@
+server:
+  port: 8085
+
 spring:
   application:
-    name: song-service
+    name: storage-service
   datasource:
-    url: jdbc:postgresql://song_postgres_db:5432/song_service_db
-    username: song_user
-    password: song_password
+    url: jdbc:postgresql://storage_postgres_db:5432/storage_service_db
+    username: storage_user
+    password: storage_password
     driver-class-name: org.postgresql.Driver
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
       ddl-auto: update
-      show-sql: true
+    show-sql: true
   servlet:
     multipart:
       max-file-size: 20MB
@@ -22,15 +25,6 @@ spring:
     swagger-ui:
       enabled: true
       path: /swagger-ui.html
-server:
-  port: 8082
-
-eureka:
-  client:
-    serviceUrl:
-      defaultZone: http://discovery-service:8761/eureka/
-  instance:
-    hostname: song-service
 
 management:
   endpoints:
@@ -46,8 +40,6 @@ management:
         enabled: true
     tags:
       application: ${spring.application.name}
-
-
 #  tracing:
 #    sampling:
 #      probability: 1.0

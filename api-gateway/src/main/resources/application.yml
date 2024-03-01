@@ -4,6 +4,7 @@ eureka:
       defaultZone: http://discovery-service:8761/eureka/
   instance:
     hostname: api-gateway
+
 spring:
   application:
     name: api-gateway
@@ -61,7 +62,27 @@ resilience4j.circuitbreaker:
     resourceProcessor:
       baseConfig: default
 
-logging:
-  level:
-    org.springframework.cloud.gateway: TRACE
-    org.springframework.cloud.circuitbreaker: DEBUG
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "health,info,prometheus"
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+#  tracing:
+#    sampling:
+#      probability: 1.0
+#  zipkin:
+#    tracing:
+#      endpoint: http://zipkin:9411/api/v2/spans
+#
+#logging:
+#  pattern:
+#    level: "%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]"

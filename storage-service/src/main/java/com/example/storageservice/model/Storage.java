@@ -21,13 +21,13 @@ public class Storage {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
     @Enumerated(EnumType.STRING)
+    @Column(name = "storage_type")
     private StorageType storageType;
 
-    @Column(nullable = false)
+    @Column(name = "bucket")
     private String bucket;
 
-    @Column(nullable = false)
+    @Column(name = "path")
     private String path;
 }

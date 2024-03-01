@@ -45,7 +45,7 @@ public class ResourceService {
 
     private final AmazonS3 s3client;
 
-    private final StorageService storageService;
+    private final AmazonS3Service amazonS3Service;
 
     private final RabbitTemplate rabbitTemplate;
 
@@ -101,7 +101,7 @@ public class ResourceService {
     @Transactional
     public Integer uploadFileToS3Bucket(MultipartFile multipartFile) {
         // this method upload file to s3 bucket and save the location into our db
-        storageService.uploadFileToS3(multipartFile);
+        amazonS3Service.uploadFileToS3(multipartFile);
 
         // save to db
         ResourceLocation resourceLocation = new ResourceLocation();
@@ -121,7 +121,7 @@ public class ResourceService {
     @Transactional
     public Resource getResourceFromS3(Integer resourceLocationId) {
         ResourceLocation resourceLocation = resourceLocationRepository.getReferenceById(resourceLocationId);
-        File fileData = storageService.getFileFromS3(resourceLocation.getKey());
+        File fileData = amazonS3Service.getFileFromS3(resourceLocation.getKey());
         Resource resource = null;
         try {
             resource = extractMetadata(FileUtils.readFileToByteArray(fileData));

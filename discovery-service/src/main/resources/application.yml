@@ -5,3 +5,32 @@ eureka:
   client:
     register-with-eureka: false
     fetch-registry: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "health,info,prometheus"
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: discovery-service
+
+#tracing:
+#  sampling:
+#    probability: 1.0
+#zipkin:
+#  tracing:
+#    endpoint: http://zipkin:9411/api/v2/spans
+#
+#logging:
+#  level:
+#    com.netflix.eureka: OFF
+#    com.netflix.discovery: OFF
+#  pattern:
+#    level: "%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]"
