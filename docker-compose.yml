@@ -149,6 +149,14 @@ services:
     ports:
       - "3000:3000"
 
+  keycloak:
+    image: jboss/keycloak
+    environment:
+      KEYCLOAK_USER: admin
+      KEYCLOAK_PASSWORD: admin
+    ports:
+      - 9001:9001
+
 volumes:
   resource-postgres-data:
   song-postgres-data:
